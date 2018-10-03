@@ -2,4 +2,5 @@
 target/
 *.class
 *.log
-*.jar
+/*.jar
+/*.tsv
