@@ -17,13 +17,13 @@ object UserProducer extends LazyLogging {
     val path = Paths.get(pathname)
     Files.lines(path).forEach { line =>
       val params = line.split("\t")
-      if (params.length == 3) {
+      if (params.length > 2) {
         for {
           id <- Try(UUID.fromString(params(0)))
           lon <- Try(params(1).toDouble)
           lat <- Try(params(2).toDouble)
         } yield {
-          userManager ! UserManager.UpdateUser(id.toString, lon, lat)
+          userManager ! UserManager.AddUser(id.toString, lon, lat)
         }
       }
     }

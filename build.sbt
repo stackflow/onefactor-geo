@@ -1,5 +1,3 @@
-import sbt.Keys.test
-
 lazy val akkaV = "2.5.17"
 lazy val akkaHttpV = "10.1.5"
 lazy val circeV = "0.10.0"
@@ -14,19 +12,18 @@ lazy val dependencies = Seq(
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
   "com.typesafe.akka" %% "akka-stream-testkit" % akkaV % Test,
 
-  "de.heikoseeberger" %% "akka-http-circe" % "1.21.0",
+  "de.heikoseeberger" %% "akka-http-circe" % "1.22.0",
   "io.circe" %% "circe-core" % circeV,
   "io.circe" %% "circe-generic" % circeV,
   "io.circe" %% "circe-parser" % circeV,
 
-  "org.scalatest" %% "scalatest" % "3.0.5"
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
 
 lazy val commonSettings = Seq(
   version := "1.0.0",
   organization := "onefactor",
-  scalaVersion := "2.12.6",
-  test in assembly := {}
+  scalaVersion := "2.12.6"
 )
 
 lazy val geo = (project in file("."))

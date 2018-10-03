@@ -26,11 +26,11 @@ object Producer extends App {
   val minNumberOfCells = 9000
   val numberOfCells = minNumberOfUsers + r.nextInt(maxNumberOfCells - minNumberOfCells)
   val cellsFilename = "geo-cells.tsv"
-  val maxDistanceError = 20000
+  val maxDistanceError = 20000 // meters
   println(s"Grid generation started ($numberOfCells)")
   val cellsPath: Path = Paths.get(cellsFilename)
   Files.write(cellsPath, Array.emptyByteArray, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
-  val cells = (-179 to 180) flatMap { longitude =>
+  val cells = (-179 until 180) flatMap { longitude =>
     (-90 to 90) map { latitude =>
       (longitude, latitude)
     }

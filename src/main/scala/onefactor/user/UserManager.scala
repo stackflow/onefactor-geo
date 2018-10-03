@@ -1,13 +1,18 @@
 package onefactor.user
 
 import akka.actor.{Actor, ActorRef, Props}
-import com.typesafe.scalalogging.LazyLogging
+import onefactor.Coord
+import onefactor.grid.GridManager
 
 import scala.collection.mutable
 
 object UserManager {
 
   sealed trait Request
+
+  case class AddUser(id: String,
+                     lon: Double,
+                     lat: Double) extends Request // for UserProducer
 
   case class UpdateUser(id: String,
                         lon: Double,
@@ -17,6 +22,9 @@ object UserManager {
 
   case class GetUser(id: String) extends Request
 
+  case class GetUsers(lon: Double,
+                      lat: Double) extends Request
+
   def props(gridManager: ActorRef): Props = {
     Props(classOf[UserManager], gridManager)
   }
@@ -25,7 +33,7 @@ object UserManager {
 
 }
 
-class UserManager(gridManager: ActorRef) extends Actor with LazyLogging {
+class UserManager(gridManager: ActorRef) extends Actor {
 
   val users = mutable.Map.empty[String, User]
 
@@ -39,17 +47,38 @@ class UserManager(gridManager: ActorRef) extends Actor with LazyLogging {
       }
 
     case UserManager.UpdateUser(id: String, lon: Double, lat: Double) =>
-      if (lon < -180 || lon > 180 || lat < -90 || lat > 90) {
-        sender() ! new IllegalArgumentException("Wrong coordinates!")
-      } else {
+      if (Coord.isRight(lon, lat)) {
         val user = User(id, lon, lat, None)
         users += (id -> user)
         gridManager forward user
+      } else {
+        sender() ! new IllegalArgumentException("Wrong coordinates!")
       }
 
     case UserManager.DeleteUser(id: String) =>
       val user = users.remove(id)
       sender() ! user
+
+    case UserManager.AddUser(id: String, lon: Double, lat: Double) => // for UserProducer
+      if (Coord.isRight(lon, lat)) {
+        val user = User(id, lon, lat, None)
+        users += (id -> user)
+      }
+
+    case UserManager.GetUsers(lon, lat) =>
+      val lastSender = sender()
+      gridManager ! GridManager.GetCell(lon, lat, lastSender)
+
+    case GridManager.CellAnswer(cellOpt, requestor) => // message from GridManager, answer to GetCell
+      cellOpt match {
+        case Some(cell) =>
+          val count = users.count { case (_, user) =>
+            user.lon.toInt == cell.tileX && user.lat.toInt == cell.tileY
+          }
+          requestor ! Some(Users(cell.tileX, cell.tileY, count))
+        case None =>
+          requestor ! None
+      }
   }
 
 }
